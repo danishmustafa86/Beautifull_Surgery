@@ -1,0 +1,47 @@
+# Global ignores
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+
+# Python (backend)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+venv/
+.env/
+.poetry/
+.mypy_cache/
+.pytest_cache/
+
+# Node (frontend)
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+frontend/package-lock.json
+
+# VSCode and IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS
+*.swp
+*~
+
+# Data and output
+excel_sheets_data/*.csv
+excel_sheets_data/*.xlsx
+excel_sheets_data/*.txt
+excel_sheets_data/*.log
+
+# Misc
+*.bak
+*.tmp 
