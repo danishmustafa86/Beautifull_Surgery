@@ -1,0 +1,75 @@
+/* Global styles for better typography and spacing */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+}
+
+/* Leaflet map improvements */
+.leaflet-container {
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+  line-height: 1.5;
+}
+
+/* Custom scrollbar for procedure list */
+.MuiBox-root::-webkit-scrollbar {
+  width: 6px;
+}
+
+.MuiBox-root::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.MuiBox-root::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.MuiBox-root::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Card hover effects */
+.MuiCard-root {
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Improved focus styles */
+.MuiSelect-select:focus,
+.MuiInputBase-input:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
