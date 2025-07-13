@@ -28,7 +28,10 @@ import {
   Avatar,
   IconButton,
   Tooltip,
-  Skeleton
+  Skeleton,
+  Autocomplete,
+  TextField,
+  ListItemIcon
 } from '@mui/material';
 import {
   Room as RoomIcon,
@@ -37,9 +40,13 @@ import {
   Language as WebsiteIcon,
   AccessTime as TimeIcon,
   Person as PersonIcon,
-  Medical as MedicalIcon,
+  LocalPharmacy as MedicalIcon,
   AttachMoney as MoneyIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Male as MaleIcon,
+  Female as FemaleIcon,
+  Work as WorkIcon,
+  School as SchoolIcon
 } from '@mui/icons-material';
 
 // Fix for default markers in react-leaflet
@@ -139,8 +146,27 @@ function LoadingSkeleton({ count = 1 }) {
 
 // Enhanced procedure card with pricing and provider info
 function ProcedureCard({ procedure, providers, onSelect, isSelected }) {
+  // Helper to show value or fallback
+  const showValue = (val) => (val !== undefined && val !== null && val !== '' && val !== 'null' ? val : <span style={{color:'#888',fontStyle:'italic'}}>Not available</span>);
+
+  // Only user-friendly fields (no IDs)
+  const fields = [
+    { label: 'Procedure Name (EN)', key: 'Raw Name (EN)' },
+    { label: 'Procedure Name (TH)', key: 'Raw Name (TH)' },
+    { label: 'Price Min (THB)', key: 'Price Min' },
+    { label: 'Price Max (THB)', key: 'Price Max' },
+    { label: 'Price Min (USD)', key: 'Price Min $$' },
+    { label: 'Price Max (USD)', key: 'Price Max $$' },
+    { label: 'Language(s)', key: 'Language U' },
+    { label: 'Source URL', key: 'Source URL', isUrl: true },
+    { label: 'Auto Filled', key: 'Auto Filled' },
+    { label: 'Confidence', key: 'Confidence' },
+    { label: 'Procedure Note', key: 'Procedure Note' },
+    { label: 'Last Update', key: 'Last Update' },
+  ];
+
   const hasPrice = procedure['Price Min'] || procedure['Price Max'] || procedure['Price Min $$'] || procedure['Price Max $$'];
-  
+
   return (
     <Card 
       sx={{ 
@@ -160,7 +186,7 @@ function ProcedureCard({ procedure, providers, onSelect, isSelected }) {
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
           <Typography variant="h6" component="h3" fontWeight="bold" flex={1}>
-            {procedure['Raw Name (EN)'] || procedure['Raw Name (TH)'] || procedure['Procedure ID'] || 'Unknown Procedure'}
+            {procedure['Raw Name (EN)'] || procedure['Raw Name (TH)'] || 'Unknown Procedure'}
           </Typography>
           {hasPrice && (
             <Chip 
@@ -172,35 +198,24 @@ function ProcedureCard({ procedure, providers, onSelect, isSelected }) {
             />
           )}
         </Box>
-        
-        {procedure['Raw Name (TH)'] && procedure['Raw Name (EN)'] && (
-          <Typography variant="body2" color="text.secondary" mb={1}>
-            {procedure['Raw Name (TH)']}
-          </Typography>
-        )}
-        
-        {hasPrice && (
-          <Box mb={2}>
-            <Typography variant="subtitle2" color="primary" fontWeight="medium">
-              Pricing Information:
-            </Typography>
-            {(procedure['Price Min'] || procedure['Price Max']) && (
-              <Typography variant="body2">
-                THB: {procedure['Price Min'] || 'N/A'} - {procedure['Price Max'] || 'N/A'}
+        <Box component="dl" sx={{ m: 0, mb: 2 }}>
+          {fields.map(({ label, key, isUrl }) => (
+            <Box key={key} display="flex" alignItems="center" mb={0.5}>
+              <Typography component="dt" variant="subtitle2" sx={{ minWidth: 120, fontWeight: 500 }}>
+                {label}:
               </Typography>
-            )}
-            {(procedure['Price Min $$'] || procedure['Price Max $$']) && (
-              <Typography variant="body2">
-                USD: {procedure['Price Min $$'] || 'N/A'} - {procedure['Price Max $$'] || 'N/A'}
+              <Typography component="dd" variant="body2" sx={{ ml: 1, wordBreak: 'break-all' }}>
+                {isUrl && procedure[key] ? (
+                  <a href={procedure[key]} target="_blank" rel="noopener noreferrer">{procedure[key]}</a>
+                ) : showValue(procedure[key])}
               </Typography>
-            )}
-          </Box>
-        )}
-        
+            </Box>
+          ))}
+        </Box>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Chip 
             icon={<MedicalIcon />} 
-            label={procedure['Procedure ID'] || 'General'} 
+            label={procedure['Raw Name (EN)'] || procedure['Raw Name (TH)'] || 'Procedure'} 
             variant="outlined" 
             size="small"
           />
@@ -213,6 +228,67 @@ function ProcedureCard({ procedure, providers, onSelect, isSelected }) {
             />
           )}
         </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LocationCard({ location }) {
+  if (!location) return null;
+  // Main fields to show with icons
+  const mainFields = [
+    { key: 'Address', label: 'Address', icon: <RoomIcon color="secondary" /> },
+    { key: 'Hours', label: 'Hours', icon: <TimeIcon color="action" /> },
+    { key: 'Phone', label: 'Phone', icon: <PhoneIcon color="action" /> },
+    { key: 'Website', label: 'Website', icon: <WebsiteIcon color="action" /> },
+  ];
+  // Fields to skip (already shown or internal IDs)
+  const skipKeys = [
+    'Address', 'Hours', 'Phone', 'Website',
+    'Clinic ID', 'Location ID', '_id', '__v', 'clinicId', 'clinic_id', '_clinicId',
+    'Branch Name', 'Location Name'
+  ];
+  // All other fields
+  const extraFields = Object.entries(location)
+    .filter(([key, value]) => !skipKeys.includes(key) && value && value !== 'null' && value !== '')
+    .map(([key, value]) => ({ key, value }));
+  return (
+    <Card sx={{ mb: 2, boxShadow: 3, borderRadius: 2 }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Avatar sx={{ bgcolor: 'secondary.main', mr: 2, width: 40, height: 40 }}>
+            <RoomIcon />
+          </Avatar>
+          <Typography variant="h6" fontWeight="bold">
+            {location['Branch Name'] || location['Location Name'] || location['Address'] || 'Location Details'}
+          </Typography>
+        </Box>
+        <Divider sx={{ mb: 2 }} />
+        <List dense>
+          {mainFields.map(({ key, label, icon }) => (
+            <ListItem disablePadding sx={{ mb: 1 }} key={key}>
+              <ListItemIcon>{icon}</ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="subtitle2" fontWeight="medium">{label}</Typography>}
+                secondary={
+                  key === 'Website' && location[key] ? (
+                    <a href={location[key]} target="_blank" rel="noopener noreferrer">{location[key]}</a>
+                  ) : location[key] ? location[key] : <span style={{color:'#888',fontStyle:'italic'}}>Not available</span>
+                }
+              />
+            </ListItem>
+          ))}
+          {/* Extra fields */}
+          {extraFields.length > 0 && <Divider sx={{ my: 1 }} />}
+          {extraFields.map(({ key, value }) => (
+            <ListItem disablePadding sx={{ mb: 1 }} key={key}>
+              <ListItemText
+                primary={<Typography variant="subtitle2" fontWeight="medium">{key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/\b\w/g, l => l.toUpperCase()).trim()}</Typography>}
+                secondary={<Typography variant="body2">{value}</Typography>}
+              />
+            </ListItem>
+          ))}
+        </List>
       </CardContent>
     </Card>
   );
@@ -435,25 +511,25 @@ function App() {
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Select Hospital/Clinic</InputLabel>
-                <Select
-                  value={selectedClinic}
-                  label="Select Hospital/Clinic"
-                  onChange={e => setSelectedClinic(e.target.value)}
-                  disabled={loading.clinics}
-                >
-                  <MenuItem value="">Choose a healthcare facility</MenuItem>
-                  {clinics.map(c => (
-                    <MenuItem key={c._id} value={c['Clinic ID'] || c._id}>
-                      <Box display="flex" alignItems="center">
-                        <HospitalIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        {getClinicDisplayName(c)}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={clinics}
+                getOptionLabel={option => getClinicDisplayName(option)}
+                value={clinics.find(c => (c['Clinic ID'] && c['Clinic ID'] === selectedClinic) || (c._id && c._id === selectedClinic)) || null}
+                onChange={(e, newValue) => setSelectedClinic(newValue ? (newValue['Clinic ID'] || newValue._id) : '')}
+                loading={loading.clinics}
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    label="Select Hospital/Clinic"
+                    placeholder="Type to search..."
+                    variant="outlined"
+                    fullWidth
+                    InputLabelProps={{ style: { fontWeight: 'bold', color: '#1976d2' } }}
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => (option['Clinic ID'] || option._id) === (value['Clinic ID'] || value._id)}
+                sx={{ minWidth: 280, mb: 1 }}
+              />
               {loading.clinics && <CircularProgress size={20} sx={{ mt: 1 }} />}
               {errors.clinics && (
                 <Alert severity="error" sx={{ mt: 1 }}>
@@ -464,25 +540,34 @@ function App() {
 
             {locations.length > 0 && (
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Select Location</InputLabel>
-                  <Select
-                    value={selectedLocation}
-                    label="Select Location"
-                    onChange={e => setSelectedLocation(e.target.value)}
-                    disabled={loading.locations}
-                  >
-                    <MenuItem value="">Choose a location</MenuItem>
-                    {locations.map(l => (
-                      <MenuItem key={l._id} value={l['Location ID'] || l._id}>
-                        <Box display="flex" alignItems="center">
-                          <RoomIcon sx={{ mr: 1, color: 'secondary.main' }} />
-                          {getLocationDisplayName(l)}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  options={locations.filter(l => {
+                    // Match by Clinic ID or _id
+                    const clinicId = selectedClinic;
+                    return (
+                      (l['Clinic ID'] && l['Clinic ID'] === clinicId) ||
+                      (l.clinicId && l.clinicId === clinicId) ||
+                      (l.clinic_id && l.clinic_id === clinicId) ||
+                      (l._clinicId && l._clinicId === clinicId)
+                    );
+                  })}
+                  getOptionLabel={option => getLocationDisplayName(option)}
+                  value={locations.find(l => (l['Location ID'] && l['Location ID'] === selectedLocation) || (l._id && l._id === selectedLocation)) || null}
+                  onChange={(e, newValue) => setSelectedLocation(newValue ? (newValue['Location ID'] || newValue._id) : '')}
+                  loading={loading.locations}
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label="Select Location"
+                      placeholder="Type to search..."
+                      variant="outlined"
+                      fullWidth
+                      InputLabelProps={{ style: { fontWeight: 'bold', color: '#1976d2' } }}
+                    />
+                  )}
+                  isOptionEqualToValue={(option, value) => (option['Location ID'] || option._id) === (value['Location ID'] || value._id)}
+                  sx={{ minWidth: 280, mb: 1 }}
+                />
                 {loading.locations && <CircularProgress size={20} sx={{ mt: 1 }} />}
                 {errors.locations && (
                   <Alert severity="error" sx={{ mt: 1 }}>
@@ -517,66 +602,13 @@ function App() {
             {loading.locations ? (
               <LoadingSkeleton />
             ) : locationDetails ? (
-              <DetailCard 
-                title="Location Details" 
-                data={locationDetails} 
-                icon={RoomIcon}
-                color="secondary"
-              />
+              <LocationCard location={locationDetails} />
             ) : selectedLocation && (
               <Alert severity="warning" sx={{ mb: 2 }}>
                 No location details available
               </Alert>
             )}
 
-            {/* Providers */}
-            {loading.providers ? (
-              <LoadingSkeleton count={2} />
-            ) : providers.length > 0 && (
-              <Card sx={{ mb: 2, boxShadow: 3, borderRadius: 2 }}>
-                <CardContent>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <Avatar sx={{ bgcolor: 'success.main', mr: 2, width: 40, height: 40 }}>
-                      <PersonIcon />
-                    </Avatar>
-                    <Typography variant="h6" fontWeight="bold">
-                      Available Providers ({providers.length})
-                    </Typography>
-                  </Box>
-                  <Divider sx={{ mb: 2 }} />
-                  <Grid container spacing={2}>
-                    {providers.map(provider => (
-                      <Grid item xs={12} sm={6} key={provider._id}>
-                        <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                          <Typography variant="subtitle1" fontWeight="medium">
-                            {provider['Full Name(ENG)'] || provider['Full Name(THAI)'] || 'Unknown Provider'}
-                          </Typography>
-                          {provider['Full Name(THAI)'] && provider['Full Name(ENG)'] && (
-                            <Typography variant="body2" color="text.secondary">
-                              {provider['Full Name(THAI)']}
-                            </Typography>
-                          )}
-                          {provider['Specialties'] && (
-                            <Chip 
-                              label={provider['Specialties']} 
-                              size="small" 
-                              sx={{ mt: 1 }}
-                              color="primary"
-                              variant="outlined"
-                            />
-                          )}
-                          {provider['Graduation Year'] && (
-                            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                              Graduated: {provider['Graduation Year']}
-                            </Typography>
-                          )}
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </CardContent>
-              </Card>
-            )}
           </Grid>
 
           {/* Right Column - Map and Procedures */}
@@ -633,7 +665,36 @@ function App() {
             {/* Procedures */}
             {loading.procedures ? (
               <LoadingSkeleton count={3} />
-            ) : procedures.length > 0 ? (
+            ) : procedures.length > 0 && (
+              <Grid item xs={12} md={6}>
+                <Autocomplete
+                  options={procedures}
+                  getOptionLabel={option => option['Raw Name (EN)'] || option['Raw Name (TH)'] || option['Procedure ID'] || 'Unknown Procedure'}
+                  value={procedures.find(p => p._id === (selectedProcedure?._id || selectedProcedure)) || null}
+                  onChange={(e, newValue) => setSelectedProcedure(newValue || null)}
+                  loading={loading.procedures}
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label="Select Procedure Offering"
+                      placeholder="Type to search..."
+                      variant="outlined"
+                      fullWidth
+                      InputLabelProps={{ style: { fontWeight: 'bold', color: '#1976d2' } }}
+                    />
+                  )}
+                  isOptionEqualToValue={(option, value) => option._id === value._id}
+                  sx={{ minWidth: 280, mb: 1 }}
+                />
+                {loading.procedures && <CircularProgress size={20} sx={{ mt: 1 }} />}
+                {errors.procedures && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {errors.procedures}
+                  </Alert>
+                )}
+              </Grid>
+            )}
+            {procedures.length > 0 && (
               <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={2}>
@@ -647,21 +708,112 @@ function App() {
                   <Divider sx={{ mb: 2 }} />
                   <Box sx={{ maxHeight: 600, overflowY: 'auto' }}>
                     {procedures.map(procedure => (
-                      <ProcedureCard
-                        key={procedure._id}
-                        procedure={procedure}
-                        providers={selectedProcedure?._id === procedure._id ? providers : []}
-                        onSelect={setSelectedProcedure}
-                        isSelected={selectedProcedure?._id === procedure._id}
-                      />
+                      <React.Fragment key={procedure._id}>
+                        <ProcedureCard
+                          procedure={procedure}
+                          providers={selectedProcedure?._id === procedure._id ? providers : []}
+                          onSelect={setSelectedProcedure}
+                          isSelected={selectedProcedure?._id === procedure._id}
+                        />
+                        {/* Show providers directly below the selected procedure */}
+                        {selectedProcedure?._id === procedure._id && providers.length > 0 && (
+                          <Card sx={{ mb: 2, boxShadow: 1, borderRadius: 2, ml: 2, mr: 2, background: '#f9f9fb' }}>
+                            <CardContent>
+                              <Box display="flex" alignItems="center" mb={2}>
+                                <Avatar sx={{ bgcolor: 'success.main', mr: 2, width: 40, height: 40 }}>
+                                  <PersonIcon />
+                                </Avatar>
+                                <Typography variant="h6" fontWeight="bold">
+                                  Available Providers ({providers.length})
+                                </Typography>
+                              </Box>
+                              <Divider sx={{ mb: 2 }} />
+                              <Grid container spacing={2}>
+                                {providers.map(provider => (
+                                  <Grid item xs={12} sm={6} key={provider._id}>
+                                    <Paper sx={{ 
+                                      p: 2, 
+                                      bgcolor: 'grey.50', 
+                                      borderRadius: 2,
+                                      transition: 'all 0.2s ease-in-out',
+                                      '&:hover': {
+                                        bgcolor: 'grey.100',
+                                        transform: 'translateY(-1px)',
+                                        boxShadow: 2
+                                      }
+                                    }}>
+                                      {/* Provider Name and Gender */}
+                                      <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                                        <Typography variant="subtitle1" fontWeight="medium" flex={1}>
+                                          {provider['Full Name(ENG)'] || provider['Full Name(THAI)'] || 'Unknown Provider'}
+                                        </Typography>
+                                        {provider['Gender'] && (
+                                          <Box display="flex" alignItems="center">
+                                            {provider['Gender'].toLowerCase() === 'male' ? (
+                                              <MaleIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                                            ) : provider['Gender'].toLowerCase() === 'female' ? (
+                                              <FemaleIcon sx={{ color: 'secondary.main', fontSize: 20 }} />
+                                            ) : (
+                                              <PersonIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                                            )}
+                                            <Typography variant="caption" sx={{ ml: 0.5, color: 'text.secondary' }}>
+                                              {provider['Gender']}
+                                            </Typography>
+                                          </Box>
+                                        )}
+                                      </Box>
+                                      {/* Thai Name if different */}
+                                      {provider['Full Name(THAI)'] && provider['Full Name(ENG)'] && provider['Full Name(THAI)'] !== provider['Full Name(ENG)'] && (
+                                        <Typography variant="body2" color="text.secondary" mb={1}>
+                                          {provider['Full Name(THAI)']}
+                                        </Typography>
+                                      )}
+                                      {/* Specialties */}
+                                      {provider['Specialties'] && (
+                                        <Box mb={1}>
+                                          <Box display="flex" alignItems="center" mb={0.5}>
+                                            <WorkIcon sx={{ mr: 0.5, fontSize: 16, color: 'primary.main' }} />
+                                            <Typography variant="caption" fontWeight="medium" color="primary">
+                                              Specialties:
+                                            </Typography>
+                                          </Box>
+                                          <Chip 
+                                            label={provider['Specialties']} 
+                                            size="small" 
+                                            color="primary"
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.75rem' }}
+                                          />
+                                        </Box>
+                                      )}
+                                      {/* Additional Info Row */}
+                                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                                        {provider['Graduation Year'] && (
+                                          <Box display="flex" alignItems="center">
+                                            <SchoolIcon sx={{ mr: 0.5, fontSize: 16, color: 'text.secondary' }} />
+                                            <Typography variant="caption" color="text.secondary">
+                                              {provider['Graduation Year']}
+                                            </Typography>
+                                          </Box>
+                                        )}
+                                        {provider['Provider ID'] && (
+                                          <Typography variant="caption" color="text.secondary">
+                                            ID: {provider['Provider ID']}
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                    </Paper>
+                                  </Grid>
+                                ))}
+                              </Grid>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </React.Fragment>
                     ))}
                   </Box>
                 </CardContent>
               </Card>
-            ) : selectedLocation && (
-              <Alert severity="info">
-                No procedures available for this location
-              </Alert>
             )}
             
             {errors.procedures && (
