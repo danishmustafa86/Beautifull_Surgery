@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_CONFIG, { MAP_CONFIG, APP_CONFIG } from './config/api';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -49,7 +50,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = API_CONFIG.BASE_URL;
 
 // Enhanced DetailCard component with better styling and null handling
 function DetailCard({ title, data, icon: Icon, color = 'primary' }) {
@@ -412,7 +413,7 @@ function App() {
         <Toolbar>
           <HospitalIcon sx={{ mr: 2, fontSize: 32 }} />
           <Typography variant="h4" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            Healthtech Directory
+            {APP_CONFIG.NAME}
           </Typography>
           <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
             Find Healthcare Providers
@@ -587,12 +588,12 @@ function App() {
                   <Box sx={{ height: 400, borderRadius: 2, overflow: 'hidden' }}>
                     <MapContainer
                       center={getLatLng(locationDetails)}
-                      zoom={16}
+                      zoom={MAP_CONFIG.DEFAULT_ZOOM + 4}
                       style={{ height: '100%', width: '100%' }}
                     >
                       <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; OpenStreetMap contributors"
+                        url={MAP_CONFIG.TILE_LAYER}
+                        attribution={MAP_CONFIG.ATTRIBUTION}
                       />
                       <Marker position={getLatLng(locationDetails)}>
                         <Popup>
