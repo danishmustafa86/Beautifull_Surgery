@@ -1,0 +1,25 @@
+﻿
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : [{"_id":"6873d1078a4d3e7126b43edf","Location ID":"LOC001","Location 
+                    UUID":null,"Clinic ID":"CL008","Branch Name":"Meko Clinic (Central 
+                    World)","Address":"5 4,4 / 1-2,4 Room No. B505/1 999/9 4 Rama I R...
+RawContent        : HTTP/1.1 200 OK
+                    Content-Length: 1743
+                    Content-Type: application/json
+                    Date: Mon, 14 Jul 2025 12:16:28 GMT
+                    Server: uvicorn
+                    
+                    [{"_id":"6873d1078a4d3e7126b43edf","Location ID":"LOC001","Location UUID"...
+Forms             : {}
+Headers           : {[Content-Length, 1743], [Content-Type, application/json], [Date, Mon, 14 Jul 
+                    2025 12:16:28 GMT], [Server, uvicorn]}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : System.__ComObject
+RawContentLength  : 1743
+
+
+

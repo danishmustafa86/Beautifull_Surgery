@@ -260,7 +260,7 @@ function LocationCard({ location }) {
             <RoomIcon />
           </Avatar>
           <Typography variant="h6" fontWeight="bold">
-            {location['Branch Name'] || location['Location Name'] || location['Address'] || 'Location Details'}
+            {location['Branch Name'] || location['Address'] || location['Location ID'] || 'Location Details'}
           </Typography>
         </Box>
         <Divider sx={{ mb: 2 }} />
@@ -390,10 +390,8 @@ function App() {
   // Handle location selection
   useEffect(() => {
     if (selectedLocation) {
-      const found = locations.find(l => 
-        (l['Location ID'] && l['Location ID'] === selectedLocation) || 
-        (l._id && l._id === selectedLocation)
-      );
+      // Always find the location object by Location ID
+      const found = locations.find(l => l['Location ID'] === selectedLocation);
       setLocationDetails(found || null);
     } else {
       setLocationDetails(null);
@@ -552,20 +550,20 @@ function App() {
                     );
                   })}
                   getOptionLabel={option => getLocationDisplayName(option)}
-                  value={locations.find(l => (l['Location ID'] && l['Location ID'] === selectedLocation) || (l._id && l._id === selectedLocation)) || null}
-                  onChange={(e, newValue) => setSelectedLocation(newValue ? (newValue['Location ID'] || newValue._id) : '')}
+                  value={locations.find(l => l['Location ID'] === selectedLocation) || null}
+                  onChange={(e, newValue) => setSelectedLocation(newValue ? newValue['Location ID'] : '')}
                   loading={loading.locations}
                   renderInput={params => (
                     <TextField
                       {...params}
-                      label="Select Location"
+                      label="Select Branch"
                       placeholder="Type to search..."
                       variant="outlined"
                       fullWidth
                       InputLabelProps={{ style: { fontWeight: 'bold', color: '#1976d2' } }}
                     />
                   )}
-                  isOptionEqualToValue={(option, value) => (option['Location ID'] || option._id) === (value['Location ID'] || value._id)}
+                  isOptionEqualToValue={(option, value) => option['Location ID'] === value['Location ID']}
                   sx={{ minWidth: 280, mb: 1 }}
                 />
                 {loading.locations && <CircularProgress size={20} sx={{ mt: 1 }} />}
@@ -602,7 +600,57 @@ function App() {
             {loading.locations ? (
               <LoadingSkeleton />
             ) : locationDetails ? (
-              <LocationCard location={locationDetails} />
+              <>
+                <LocationCard location={locationDetails} />
+                {/* Map always shown with location info */}
+                {getLatLng(locationDetails) ? (
+                  <Card sx={{ mb: 4, boxShadow: 3, borderRadius: 2 }}>
+                    <CardContent sx={{ p: 0 }}>
+                      <Box sx={{ height: 400, borderRadius: 2, overflow: 'hidden' }}>
+                        <MapContainer
+                          center={getLatLng(locationDetails)}
+                          zoom={MAP_CONFIG.DEFAULT_ZOOM + 4}
+                          style={{ height: '100%', width: '100%' }}
+                        >
+                          <TileLayer
+                            url={MAP_CONFIG.TILE_LAYER}
+                            attribution={MAP_CONFIG.ATTRIBUTION}
+                          />
+                          <Marker position={getLatLng(locationDetails)}>
+                            <Popup>
+                              <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                  {getLocationDisplayName(locationDetails)}
+                                </Typography>
+                                {locationDetails['Address'] && (
+                                  <Typography variant="body2">
+                                    {locationDetails['Address']}
+                                  </Typography>
+                                )}
+                                {locationDetails['Hours'] && (
+                                  <Box display="flex" alignItems="center" mt={1}>
+                                    <TimeIcon sx={{ mr: 1, fontSize: 16 }} />
+                                    <Typography variant="caption">
+                                      {locationDetails['Hours']}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            </Popup>
+                          </Marker>
+                        </MapContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Alert severity="info" sx={{ mb: 4 }}>
+                    <Box display="flex" alignItems="center">
+                      <InfoIcon sx={{ mr: 1 }} />
+                      Map not available - location coordinates not found
+                    </Box>
+                  </Alert>
+                )}
+              </>
             ) : selectedLocation && (
               <Alert severity="warning" sx={{ mb: 2 }}>
                 No location details available
@@ -613,55 +661,6 @@ function App() {
 
           {/* Right Column - Map and Procedures */}
           <Grid item xs={12} lg={6}>
-            {/* Map */}
-            {locationDetails && getLatLng(locationDetails) ? (
-              <Card sx={{ mb: 4, boxShadow: 3, borderRadius: 2 }}>
-                <CardContent sx={{ p: 0 }}>
-                  <Box sx={{ height: 400, borderRadius: 2, overflow: 'hidden' }}>
-                    <MapContainer
-                      center={getLatLng(locationDetails)}
-                      zoom={MAP_CONFIG.DEFAULT_ZOOM + 4}
-                      style={{ height: '100%', width: '100%' }}
-                    >
-                      <TileLayer
-                        url={MAP_CONFIG.TILE_LAYER}
-                        attribution={MAP_CONFIG.ATTRIBUTION}
-                      />
-                      <Marker position={getLatLng(locationDetails)}>
-                        <Popup>
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              {getLocationDisplayName(locationDetails)}
-                            </Typography>
-                            {locationDetails['Address'] && (
-                              <Typography variant="body2">
-                                {locationDetails['Address']}
-                              </Typography>
-                            )}
-                            {locationDetails['Hours'] && (
-                              <Box display="flex" alignItems="center" mt={1}>
-                                <TimeIcon sx={{ mr: 1, fontSize: 16 }} />
-                                <Typography variant="caption">
-                                  {locationDetails['Hours']}
-                                </Typography>
-                              </Box>
-                            )}
-                          </Box>
-                        </Popup>
-                      </Marker>
-                    </MapContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            ) : locationDetails && (
-              <Alert severity="info" sx={{ mb: 4 }}>
-                <Box display="flex" alignItems="center">
-                  <InfoIcon sx={{ mr: 1 }} />
-                  Map not available - location coordinates not found
-                </Box>
-              </Alert>
-            )}
-
             {/* Procedures */}
             {loading.procedures ? (
               <LoadingSkeleton count={3} />
