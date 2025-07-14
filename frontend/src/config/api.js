@@ -1,6 +1,7 @@
 // API Configuration
+// For local development, use the backend URL:
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
+  BASE_URL: 'http://localhost:8000', // Change to '' for production on Render
   VERSION: process.env.REACT_APP_API_VERSION || 'v1',
   TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
   RETRY_COUNT: parseInt(process.env.REACT_APP_REQUEST_RETRY_COUNT) || 3,

@@ -338,12 +338,14 @@ function App() {
   // Load clinics on component mount
   useEffect(() => {
     handleApiCall(
-      () => axios.get(`${API_BASE}/clinics-hospitals`),
+      () => axios.get(`${API_BASE}/clinics-hospitals`).then(res => { console.log('Clinics API response:', res); return res; }),
       'clinics',
       'clinics'
     ).then(response => {
       if (response?.data) {
         setClinics(response.data);
+      } else {
+        console.log('No clinics data received:', response);
       }
     });
   }, []);
@@ -365,12 +367,14 @@ function App() {
   useEffect(() => {
     if (selectedClinic) {
       handleApiCall(
-        () => axios.get(`${API_BASE}/locations`, { params: { clinicId: selectedClinic } }),
+        () => axios.get(`${API_BASE}/locations`, { params: { clinicId: selectedClinic } }).then(res => { console.log('Locations API response:', res); return res; }),
         'locations',
         'locations'
       ).then(response => {
         if (response?.data) {
           setLocations(response.data);
+        } else {
+          console.log('No locations data received:', response);
         }
         // Reset dependent states
         setSelectedLocation('');
@@ -404,12 +408,14 @@ function App() {
       handleApiCall(
         () => axios.get(`${API_BASE}/procedure-offerings`, {
           params: { clinicId: selectedClinic, locationId: selectedLocation }
-        }),
+        }).then(res => { console.log('Procedures API response:', res); return res; }),
         'procedures',
         'procedures'
       ).then(response => {
         if (response?.data) {
           setProcedures(response.data);
+        } else {
+          console.log('No procedures data received:', response);
         }
         setSelectedProcedure(null);
         setProviders([]);
@@ -435,12 +441,14 @@ function App() {
       
       if (ids) {
         handleApiCall(
-          () => axios.get(`${API_BASE}/providers`, { params: { ids } }),
+          () => axios.get(`${API_BASE}/providers`, { params: { ids } }).then(res => { console.log('Providers API response:', res); return res; }),
           'providers',
           'providers'
         ).then(response => {
           if (response?.data) {
             setProviders(response.data);
+          } else {
+            console.log('No providers data received:', response);
           }
         });
       }
@@ -507,8 +515,8 @@ function App() {
           <Typography variant="h5" gutterBottom fontWeight="bold" color="primary">
             Search Healthcare Providers
           </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+          <Grid container columns={12} spacing={3}>
+            <Grid gridColumn="span 6">
               <Autocomplete
                 options={clinics}
                 getOptionLabel={option => getClinicDisplayName(option)}
@@ -537,7 +545,7 @@ function App() {
             </Grid>
 
             {locations.length > 0 && (
-              <Grid item xs={12} md={6}>
+              <Grid gridColumn="span 6">
                 <Autocomplete
                   options={locations.filter(l => {
                     // Match by Clinic ID or _id
@@ -577,9 +585,9 @@ function App() {
           </Grid>
         </Paper>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={4} columns={12}>
           {/* Left Column - Details */}
-          <Grid item xs={12} lg={6}>
+          <Grid gridColumn="span 6">
             {/* Clinic Details */}
             {loading.clinics ? (
               <LoadingSkeleton />
@@ -660,12 +668,12 @@ function App() {
           </Grid>
 
           {/* Right Column - Map and Procedures */}
-          <Grid item xs={12} lg={6}>
+          <Grid gridColumn="span 6">
             {/* Procedures */}
             {loading.procedures ? (
               <LoadingSkeleton count={3} />
             ) : procedures.length > 0 && (
-              <Grid item xs={12} md={6}>
+              <Grid gridColumn="span 6">
                 <Autocomplete
                   options={procedures}
                   getOptionLabel={option => option['Raw Name (EN)'] || option['Raw Name (TH)'] || option['Procedure ID'] || 'Unknown Procedure'}
@@ -729,7 +737,7 @@ function App() {
                               <Divider sx={{ mb: 2 }} />
                               <Grid container spacing={2}>
                                 {providers.map(provider => (
-                                  <Grid item xs={12} sm={6} key={provider._id}>
+                                  <Grid gridColumn="span 6" key={provider._id}>
                                     <Paper sx={{ 
                                       p: 2, 
                                       bgcolor: 'grey.50', 

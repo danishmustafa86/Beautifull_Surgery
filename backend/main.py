@@ -27,30 +27,37 @@ db = client[DB_NAME]
 
 @app.get("/clinics-hospitals")
 async def get_clinics_hospitals():
+    print("[API] /clinics-hospitals called")
     docs = await db["ClinicsHospitals"].find().to_list(1000)
+    print(f"[API] /clinics-hospitals returning {len(docs)} records")
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return docs
 
 @app.get("/locations")
 async def get_locations(clinicId: str = Query(...)):
+    print(f"[API] /locations called with clinicId={clinicId}")
     docs = await db["Locations"].find({"Clinic ID": clinicId}).to_list(100)
+    print(f"[API] /locations returning {len(docs)} records")
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return docs
 
 @app.get("/procedure-offerings")
 async def get_procedure_offerings(clinicId: str = Query(...), locationId: str = Query(...)):
+    print(f"[API] /procedure-offerings called with clinicId={clinicId}, locationId={locationId}")
     docs = await db["ProcedureOfferings"].find({"Clinic ID": clinicId, "Location ID": locationId}).to_list(100)
+    print(f"[API] /procedure-offerings returning {len(docs)} records")
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return docs
 
 @app.get("/providers")
 async def get_providers(ids: str = Query(...)):
-    # ids is a comma-separated string of ObjectIds
+    print(f"[API] /providers called with ids={ids}")
     id_list = [i for i in ids.split(",") if i]
     docs = await db["Providers"].find({"Provider ID": {"$in": id_list}}).to_list(100)
+    print(f"[API] /providers returning {len(docs)} records")
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return docs 
