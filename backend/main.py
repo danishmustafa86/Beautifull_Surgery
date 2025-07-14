@@ -54,3 +54,13 @@ async def get_providers(ids: str = Query(...)):
     for doc in docs:
         doc["_id"] = str(doc["_id"])
     return docs 
+
+
+from fastapi.staticfiles import StaticFiles
+import os
+
+app.mount(
+    "/",
+         StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend/build"), html=True),
+         name="static",
+     )
